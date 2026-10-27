@@ -25,7 +25,7 @@ class L678W_Helpers {
 	public static function default_settings() {
 		return array(
 			'warranty_months' => 12,
-			'address_mode'    => 'full', // full | partial | hide
+			'address_mode'    => 'partial', // full | partial | hide
 			'show_warranty'   => 1,
 			'title'           => 'Tra cứu thông tin bảo hành',
 			'intro'           => '',
@@ -51,13 +51,14 @@ class L678W_Helpers {
 		$raw    = preg_replace( '/\+\s*84/', '0', $raw );
 		$groups = preg_split( '/\D+/', $raw, -1, PREG_SPLIT_NO_EMPTY );
 
-		// Ghép các nhóm số bị ngắt bởi khoảng trắng/dấu chấm thành một số hoàn chỉnh.
+		// Ghép các nhóm số bị ngắt bởi khoảng trắng, dấu chấm hay ký tự rác (VD: "0'0985672811",
+		// "0035 8494409") thành một số. Độ dài tính sau khi bỏ các số 0 ở đầu.
 		$numbers = array();
 		$buffer  = '';
 		foreach ( $groups as $group ) {
 			if ( '' === $buffer ) {
 				$buffer = $group;
-			} elseif ( strlen( $buffer ) < 9 && strlen( $buffer . $group ) <= 11 ) {
+			} elseif ( strlen( ltrim( $buffer, '0' ) ) < 9 && strlen( ltrim( $buffer . $group, '0' ) ) <= 11 ) {
 				$buffer .= $group;
 			} else {
 				$numbers[] = $buffer;
@@ -70,15 +71,14 @@ class L678W_Helpers {
 
 		$phones = array();
 		foreach ( $numbers as $number ) {
-			if ( 11 === strlen( $number ) && 0 === strpos( $number, '84' ) ) {
-				$number = '0' . substr( $number, 2 );
+			// Bỏ mọi số 0 thừa ở đầu (VD: "00983441568"), rồi thêm lại đúng một số 0.
+			$core = ltrim( $number, '0' );
+			if ( 11 === strlen( $core ) && 0 === strpos( $core, '84' ) ) {
+				$core = substr( $core, 2 );
 			}
-			// Excel hay làm mất số 0 ở đầu.
-			if ( 9 === strlen( $number ) && '0' !== $number[0] ) {
-				$number = '0' . $number;
-			}
-			if ( strlen( $number ) >= 10 && strlen( $number ) <= 11 && '0' === $number[0] ) {
-				$phones[] = $number;
+			// 9 chữ số: số di động 10 số; 10 chữ số: số cũ 11 số.
+			if ( strlen( $core ) >= 9 && strlen( $core ) <= 10 ) {
+				$phones[] = '0' . $core;
 			}
 		}
 		return array_values( array_unique( $phones ) );

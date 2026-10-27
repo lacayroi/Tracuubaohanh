@@ -42,10 +42,48 @@ class L678W_DB {
 			) {$charset};"
 		);
 
+		$previous = get_option( 'l678w_db_version' );
+		if ( $previous && version_compare( $previous, '1.0.1', '<' ) ) {
+			self::reindex_phones();
+		}
+
 		update_option( 'l678w_db_version', L678W_DB_VERSION );
 		if ( false === get_option( 'l678w_settings' ) ) {
 			add_option( 'l678w_settings', L678W_Helpers::default_settings(), '', 'no' );
 		}
+	}
+
+	/**
+	 * Tính lại chỉ mục SĐT cho dữ liệu cũ sau khi đổi cách chuẩn hoá số điện thoại.
+	 */
+	public static function reindex_phones() {
+		global $wpdb;
+		$table = self::table();
+		$last  = 0;
+		do {
+			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT id, customer_name, phone, phone_index, product_name, purchase_date FROM {$table} WHERE id > %d ORDER BY id ASC LIMIT 1000", $last ) );
+			foreach ( $rows as $row ) {
+				$last  = (int) $row->id;
+				$index = self::clip( L678W_Helpers::phone_index( $row->phone ), 191 );
+				if ( $index === $row->phone_index ) {
+					continue;
+				}
+				$data = array(
+					'customer_name' => $row->customer_name,
+					'phone_index'   => $index,
+					'product_name'  => $row->product_name,
+					'purchase_date' => $row->purchase_date,
+				);
+				$wpdb->update(
+					$table,
+					array(
+						'phone_index' => $index,
+						'row_hash'    => self::hash( $data ),
+					),
+					array( 'id' => $last )
+				);
+			}
+		} while ( count( $rows ) === 1000 );
 	}
 
 	/**

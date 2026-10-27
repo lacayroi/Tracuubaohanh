@@ -7,6 +7,12 @@ defined( 'ABSPATH' ) || exit;
 class L678W_Admin {
 
 	/**
+	 * Lỗi và dữ liệu vừa nhập của form Thêm/Sửa, để hiện lại form mà không mất dữ liệu.
+	 */
+	private static $form_error = '';
+	private static $form_data  = null;
+
+	/**
 	 * Quyền nhập liệu (mặc định nhân viên Biên tập viên / Quản lý cửa hàng trở lên).
 	 */
 	public static function cap() {
@@ -72,7 +78,6 @@ class L678W_Admin {
 			'deleted'  => array( 'success', 'Đã xoá %d đơn.' ),
 			'settings' => array( 'success', 'Đã lưu cài đặt.' ),
 			'cleared'  => array( 'success', 'Đã xoá toàn bộ dữ liệu bảo hành.' ),
-			'invalid'  => array( 'error', 'Vui lòng nhập ít nhất Tên khách hàng hoặc Số điện thoại.' ),
 		);
 		$key = isset( $_GET['msg'] ) ? sanitize_key( $_GET['msg'] ) : '';
 		if ( isset( $messages[ $key ] ) ) {
@@ -146,8 +151,13 @@ class L678W_Admin {
 		$row = L678W_DB::prepare_row( $data, 'manual' );
 		$id  = isset( $_POST['id'] ) ? absint( $_POST['id'] ) : 0;
 
-		if ( '' === $row['customer_name'] && '' === $row['phone'] ) {
-			self::redirect( 'l678w-edit', array_filter( array( 'msg' => 'invalid', 'id' => $id ) ) );
+		// Không có SĐT hợp lệ thì khách không tra cứu được, nên không cho lưu.
+		if ( '' === $row['phone_index'] ) {
+			self::$form_error = '' === $row['phone']
+				? 'Vui lòng nhập số điện thoại của khách.'
+				: 'Số điện thoại "' . $row['phone'] . '" không hợp lệ. Cần số 10 chữ số, VD: 0912345678 (nhiều số thì cách nhau bằng dấu phẩy).';
+			self::$form_data  = $data;
+			return;
 		}
 
 		if ( $id ) {
@@ -295,9 +305,18 @@ class L678W_Admin {
 			return;
 		}
 		$settings = L678W_Helpers::settings();
-		$value    = function ( $field ) use ( $item ) {
+		$posted   = self::$form_data;
+		$value    = function ( $field ) use ( $item, $posted ) {
+			if ( null !== $posted ) {
+				return isset( $posted[ $field ] ) ? (string) $posted[ $field ] : '';
+			}
 			return $item && isset( $item->$field ) ? (string) $item->$field : '';
 		};
+		if ( null !== $posted ) {
+			$date = (string) $posted['purchase_date'];
+		} else {
+			$date = $item ? (string) $item->purchase_date : current_time( 'Y-m-d' );
+		}
 		?>
 		<div class="wrap l678w-wrap">
 			<h1 class="wp-heading-inline"><?php echo $item ? 'Sửa thông tin bảo hành' : 'Thêm bảo hành thủ công'; ?></h1>
@@ -306,6 +325,9 @@ class L678W_Admin {
 			<?php endif; ?>
 			<hr class="wp-header-end">
 			<?php self::notice_from_query(); ?>
+			<?php if ( self::$form_error ) : ?>
+				<div class="notice notice-error"><p><?php echo esc_html( self::$form_error ); ?></p></div>
+			<?php endif; ?>
 
 			<form method="post" class="l678w-form-edit">
 				<?php wp_nonce_field( 'l678w_save' ); ?>
@@ -314,12 +336,12 @@ class L678W_Admin {
 
 				<div class="l678w-grid">
 					<p>
-						<label for="customer_name">Tên khách hàng <span class="required">*</span></label>
+						<label for="customer_name">Tên khách hàng</label>
 						<input type="text" id="customer_name" name="customer_name" value="<?php echo esc_attr( $value( 'customer_name' ) ); ?>" autofocus>
 					</p>
 					<p>
 						<label for="phone">Số điện thoại <span class="required">*</span></label>
-						<input type="tel" id="phone" name="phone" value="<?php echo esc_attr( $value( 'phone' ) ); ?>" placeholder="VD: 0912345678">
+						<input type="tel" id="phone" name="phone" value="<?php echo esc_attr( $value( 'phone' ) ); ?>" placeholder="VD: 0912345678" required>
 						<span class="description">Nhiều số thì cách nhau bằng dấu phẩy.</span>
 					</p>
 					<p class="l678w-full">
@@ -332,7 +354,7 @@ class L678W_Admin {
 					</p>
 					<p>
 						<label for="purchase_date">Ngày mua</label>
-						<input type="date" id="purchase_date" name="purchase_date" value="<?php echo esc_attr( $item ? (string) $item->purchase_date : current_time( 'Y-m-d' ) ); ?>">
+						<input type="date" id="purchase_date" name="purchase_date" value="<?php echo esc_attr( $date ); ?>">
 					</p>
 					<p class="l678w-full">
 						<label for="config">Cấu hình</label>
