@@ -1,0 +1,67 @@
+.l678w-box {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	padding: 5px 20px 15px;
+	margin: 15px 0;
+	max-width: 1100px;
+}
+
+.l678w-danger {
+	border-color: #d63638;
+}
+
+.l678w-cols {
+	max-width: 800px;
+	margin-bottom: 10px;
+}
+
+.l678w-form-edit {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	padding: 10px 20px;
+	max-width: 1000px;
+	margin-top: 15px;
+}
+
+.l678w-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0 30px;
+}
+
+.l678w-grid .l678w-full {
+	grid-column: 1 / -1;
+}
+
+.l678w-grid label {
+	display: block;
+	font-weight: 600;
+	margin-bottom: 4px;
+}
+
+.l678w-grid input[type="text"],
+.l678w-grid input[type="tel"],
+.l678w-grid input[type="date"],
+.l678w-grid input[type="number"],
+.l678w-grid textarea {
+	width: 100%;
+	max-width: 100%;
+}
+
+.l678w-grid .description {
+	display: block;
+}
+
+.l678w-grid .required {
+	color: #d63638;
+}
+
+.l678w-wrap .tablenav .actions label {
+	margin-right: 4px;
+}
+
+@media (max-width: 782px) {
+	.l678w-grid {
+		grid-template-columns: 1fr;
+	}
+}

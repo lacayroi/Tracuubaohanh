@@ -1,0 +1,165 @@
+/* Dùng màu chính của Flatsome (Theme Options > Style > Colors) nếu có. */
+.l678w-lookup {
+	--l678w-primary: var(--fs-color-primary, var(--primary-color, #d81f26));
+	--l678w-success: var(--fs-color-success, #1f9d55);
+	--l678w-alert: var(--fs-color-alert, #b20000);
+	max-width: 900px;
+	margin: 0 auto 30px;
+}
+
+.l678w-title {
+	text-align: center;
+	color: var(--l678w-primary);
+	margin-bottom: 15px;
+}
+
+.l678w-intro {
+	text-align: center;
+	margin-bottom: 15px;
+}
+
+.l678w-field {
+	display: flex;
+	gap: 0;
+}
+
+.l678w-field input[type="tel"] {
+	flex: 1;
+	min-width: 0;
+	margin: 0;
+	height: 46px;
+	font-size: 16px; /* tránh iOS tự zoom */
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+.l678w-lookup .l678w-submit {
+	margin: 0;
+	height: 46px;
+	min-height: 46px;
+	line-height: 46px;
+	padding: 0 22px;
+	white-space: nowrap;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+	background-color: var(--l678w-primary);
+	border-color: var(--l678w-primary);
+	color: #fff;
+}
+
+.l678w-lookup.is-loading .l678w-submit {
+	opacity: 0.6;
+	cursor: wait;
+}
+
+.l678w-results {
+	margin-top: 20px;
+}
+
+.l678w-summary {
+	margin-bottom: 10px;
+	color: #555;
+}
+
+.l678w-notice {
+	padding: 12px 15px;
+	border-radius: 4px;
+	border-left: 4px solid var(--l678w-alert);
+	background: #fff4f4;
+}
+
+.l678w-notice.l678w-empty {
+	border-left-color: #f0ad4e;
+	background: #fffaf0;
+}
+
+.l678w-card {
+	border: 1px solid #ddd;
+	border-radius: 6px;
+	overflow: hidden;
+	margin-bottom: 18px;
+	background: #fff;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.l678w-card-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 10px 15px;
+	background: var(--l678w-primary);
+	color: #fff;
+}
+
+.l678w-card-title {
+	font-weight: 700;
+}
+
+.l678w-badge {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 99px;
+	font-size: 13px;
+	font-weight: 600;
+	background: #fff;
+}
+
+.l678w-badge.l678w-valid {
+	color: var(--l678w-success);
+}
+
+.l678w-badge.l678w-expired {
+	color: var(--l678w-alert);
+}
+
+.l678w-lookup .l678w-table {
+	width: 100%;
+	margin: 0;
+	border-collapse: collapse;
+}
+
+.l678w-lookup .l678w-table th,
+.l678w-lookup .l678w-table td {
+	padding: 9px 15px;
+	border-bottom: 1px solid #eee;
+	text-align: left;
+	vertical-align: top;
+	text-transform: none;
+	letter-spacing: 0;
+	font-size: 15px;
+}
+
+.l678w-lookup .l678w-table tr:last-child th,
+.l678w-lookup .l678w-table tr:last-child td {
+	border-bottom: 0;
+}
+
+.l678w-lookup .l678w-table th {
+	width: 35%;
+	font-weight: 600;
+	color: #333;
+	background: #fafafa;
+}
+
+@media (max-width: 549px) {
+	.l678w-lookup .l678w-submit {
+		padding: 0 14px;
+	}
+
+	.l678w-lookup .l678w-table th,
+	.l678w-lookup .l678w-table td {
+		display: block;
+		width: 100%;
+		padding: 6px 12px;
+	}
+
+	.l678w-lookup .l678w-table th {
+		border-bottom: 0;
+		padding-bottom: 0;
+		background: none;
+		font-size: 13px;
+		color: #777;
+	}
+}
