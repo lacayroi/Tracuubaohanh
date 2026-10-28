@@ -219,7 +219,7 @@ class L678W_Admin {
 		self::csv_headers( 'mau-import-bao-hanh.csv' );
 		$out = fopen( 'php://output', 'w' );
 		fputcsv( $out, L678W_Importer::template_headers() );
-		fputcsv( $out, array( 'Nguyễn Văn A', '0912345678', 'Số 1 Cầu Giấy, Hà Nội', 'Dell Latitude 5440', 'i5 4300U, Ram 8GB, SSD 256GB, 14 HD', '25/10/2026', '12', '' ) );
+		fputcsv( $out, array( 'Nguyễn Văn A', '0912345678', 'Số 1 Cầu Giấy, Hà Nội', 'Dell Latitude 5440', 'i5 4300U, Ram 8GB, SSD 256GB, 14 HD', '25/10/2026', 'Quân', '12', '' ) );
 		fclose( $out );
 		exit;
 	}
@@ -259,6 +259,7 @@ class L678W_Admin {
 						$row->product_name,
 						$row->config,
 						L678W_Helpers::format_date( $row->purchase_date ),
+						$row->salesperson,
 						null === $row->warranty_months ? '' : $row->warranty_months,
 						$row->note,
 					)
@@ -361,6 +362,10 @@ class L678W_Admin {
 						<textarea id="config" name="config" rows="2" placeholder="VD: i5 8250U, Ram 8GB, SSD 256GB, 15.6 FHD"><?php echo esc_textarea( $value( 'config' ) ); ?></textarea>
 					</p>
 					<p>
+						<label for="salesperson">Nhân viên bán</label>
+						<input type="text" id="salesperson" name="salesperson" value="<?php echo esc_attr( $value( 'salesperson' ) ); ?>" placeholder="Tên hoặc SĐT nhân viên">
+					</p>
+					<p>
 						<label for="warranty_months">Bảo hành (tháng)</label>
 						<input type="number" min="0" max="1200" id="warranty_months" name="warranty_months" value="<?php echo esc_attr( $value( 'warranty_months' ) ); ?>" placeholder="Mặc định: <?php echo (int) $settings['warranty_months']; ?>">
 						<span class="description">Để trống = dùng mặc định trong Cài đặt.</span>
@@ -413,6 +418,7 @@ class L678W_Admin {
 						<tr><td>Tên máy</td><td>Tên máy, Tên sản phẩm, Sản phẩm, Model</td></tr>
 						<tr><td>Cấu hình</td><td>Cấu hình, SKU, Thông số</td></tr>
 						<tr><td>Ngày mua</td><td>Ngày mua, Ngày bán (dạng dd/mm/yyyy hoặc ô ngày của Excel)</td></tr>
+						<tr><td>Nhân viên bán</td><td>Nhân viên bán hàng, Nhân viên bán, Người bán</td></tr>
 						<tr><td>Bảo hành (tháng) – không bắt buộc</td><td>Bảo hành (tháng), Thời gian bảo hành, Hạn bảo hành</td></tr>
 						<tr><td>Ghi chú – không bắt buộc</td><td>Ghi chú, Tình trạng</td></tr>
 					</tbody>
@@ -432,7 +438,9 @@ class L678W_Admin {
 						<tr>
 							<th>Khi gặp đơn đã có</th>
 							<td>
-								<label><input type="radio" name="mode" value="skip" checked> Bỏ qua đơn đã có trên web (cùng SĐT + tên khách + tên máy + ngày mua) – <em>khuyên dùng khi import thêm file mới</em></label><br>
+								<label><input type="radio" name="mode" value="update" checked> Cập nhật đơn đã có trên web bằng dữ liệu trong file, thêm mới đơn chưa có – <em>khuyên dùng</em></label><br>
+								<span class="description" style="margin-left:24px">Đơn đã có = cùng SĐT + tên khách + tên máy + ngày mua. Ô trống trong file không xoá dữ liệu đang có trên web.</span><br>
+								<label><input type="radio" name="mode" value="skip"> Bỏ qua đơn đã có, chỉ thêm đơn mới</label><br>
 								<label><input type="radio" name="mode" value="all"> Thêm tất cả, không kiểm tra trùng</label>
 							</td>
 						</tr>
@@ -490,7 +498,7 @@ class L678W_Admin {
 			$tmp,
 			$ext,
 			array(
-				'mode'    => isset( $_POST['mode'] ) && 'all' === $_POST['mode'] ? 'all' : 'skip',
+				'mode'    => isset( $_POST['mode'] ) && in_array( $_POST['mode'], array( 'skip', 'all' ), true ) ? sanitize_key( $_POST['mode'] ) : 'update',
 				'replace' => ! empty( $_POST['replace'] ),
 			)
 		);
@@ -502,12 +510,15 @@ class L678W_Admin {
 		foreach ( $r['mapped'] as $field => $index ) {
 			$mapped[] = $labels[ $field ] . ' (cột ' . self::column_letter( $index ) . ')';
 		}
-		$missing = array_diff( array( 'customer_name', 'phone', 'address', 'product_name', 'config', 'purchase_date' ), array_keys( $r['mapped'] ) );
+		$missing = array_diff( array( 'customer_name', 'phone', 'address', 'product_name', 'config', 'purchase_date', 'salesperson' ), array_keys( $r['mapped'] ) );
 		?>
 		<div class="notice notice-success">
 			<p><strong>Import xong: thêm mới <?php echo (int) $r['inserted']; ?> đơn</strong>
+				<?php if ( $r['updated'] ) : ?>
+					· cập nhật <?php echo (int) $r['updated']; ?> đơn đã có
+				<?php endif; ?>
 				<?php if ( $r['duplicate'] ) : ?>
-					· bỏ qua <?php echo (int) $r['duplicate']; ?> đơn trùng
+					· <?php echo (int) $r['duplicate']; ?> đơn đã có, không thay đổi
 				<?php endif; ?>
 				<?php if ( $r['empty'] ) : ?>
 					· <?php echo (int) $r['empty']; ?> dòng trống

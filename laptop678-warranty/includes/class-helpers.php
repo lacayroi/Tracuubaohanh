@@ -17,6 +17,7 @@ class L678W_Helpers {
 			'product_name'    => 'Tên máy',
 			'config'          => 'Cấu hình',
 			'purchase_date'   => 'Ngày mua',
+			'salesperson'     => 'Nhân viên bán',
 			'warranty_months' => 'Bảo hành (tháng)',
 			'note'            => 'Ghi chú / Tình trạng',
 		);

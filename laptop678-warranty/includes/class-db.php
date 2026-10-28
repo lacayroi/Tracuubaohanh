@@ -28,6 +28,7 @@ class L678W_DB {
 			product_name varchar(255) NOT NULL DEFAULT '',
 			config text NULL,
 			purchase_date date NULL DEFAULT NULL,
+			salesperson varchar(191) NOT NULL DEFAULT '',
 			warranty_months smallint(5) unsigned NULL DEFAULT NULL,
 			note text NULL,
 			row_hash char(32) NOT NULL DEFAULT '',
@@ -98,6 +99,7 @@ class L678W_DB {
 			'product_name'    => self::clip( sanitize_text_field( L678W_Helpers::scalar_to_string( $data['product_name'] ?? '' ) ), 255 ),
 			'config'          => sanitize_textarea_field( L678W_Helpers::scalar_to_string( $data['config'] ?? '' ) ),
 			'purchase_date'   => L678W_Helpers::parse_date( $data['purchase_date'] ?? '' ),
+			'salesperson'     => self::clip( self::salesperson( $data['salesperson'] ?? '' ), 191 ),
 			'warranty_months' => is_numeric( $months ) ? max( 0, min( 1200, (int) $months ) ) : null,
 			'note'            => sanitize_textarea_field( L678W_Helpers::scalar_to_string( $data['note'] ?? '' ) ),
 		);
@@ -109,6 +111,14 @@ class L678W_DB {
 			$row['purchase_date'] = null;
 		}
 		return $row;
+	}
+
+	/**
+	 * Nhân viên bán thường được ghi bằng SĐT; Excel hay làm mất số 0 đầu (379612388 → 0379612388).
+	 */
+	private static function salesperson( $value ) {
+		$value = sanitize_text_field( L678W_Helpers::scalar_to_string( $value ) );
+		return preg_match( '/^[1-9]\d{8}$/', $value ) ? '0' . $value : $value;
 	}
 
 	public static function hash( array $row ) {
@@ -144,6 +154,35 @@ class L678W_DB {
 		return false !== $wpdb->update( self::table(), $row, array( 'id' => (int) $id ) );
 	}
 
+	/**
+	 * Cập nhật đơn đã có bằng dữ liệu trong file import. Ô trống trong file không ghi đè dữ liệu
+	 * nhân viên đã nhập trên web (VD: ghi chú, tình trạng sửa chữa).
+	 *
+	 * @return bool true nếu có thay đổi.
+	 */
+	public static function fill_from_import( $id, array $row ) {
+		global $wpdb;
+		$current = self::get( $id );
+		if ( ! $current ) {
+			return false;
+		}
+		$fields = array( 'address', 'config', 'salesperson', 'warranty_months', 'note' );
+		$change = array();
+		foreach ( $fields as $field ) {
+			if ( null === $row[ $field ] || '' === $row[ $field ] ) {
+				continue;
+			}
+			if ( (string) $row[ $field ] !== (string) $current->$field ) {
+				$change[ $field ] = $row[ $field ];
+			}
+		}
+		if ( ! $change ) {
+			return false;
+		}
+		$change['updated_at'] = current_time( 'mysql' );
+		return false !== $wpdb->update( self::table(), $change, array( 'id' => (int) $id ) );
+	}
+
 	public static function delete( array $ids ) {
 		global $wpdb;
 		$ids = array_filter( array_map( 'absint', $ids ) );
@@ -166,7 +205,7 @@ class L678W_DB {
 		$inserted = 0;
 		$now      = current_time( 'mysql' );
 		$user     = get_current_user_id();
-		$columns  = array( 'customer_name', 'phone', 'phone_index', 'address', 'product_name', 'config', 'purchase_date', 'warranty_months', 'note', 'row_hash', 'source', 'created_by', 'created_at', 'updated_at' );
+		$columns  = array( 'customer_name', 'phone', 'phone_index', 'address', 'product_name', 'config', 'purchase_date', 'salesperson', 'warranty_months', 'note', 'row_hash', 'source', 'created_by', 'created_at', 'updated_at' );
 
 		foreach ( array_chunk( $rows, $chunk ) as $batch ) {
 			$values = array();
@@ -195,13 +234,16 @@ class L678W_DB {
 		return $inserted;
 	}
 
+	/**
+	 * Map row_hash => danh sách id các đơn đang có (một khách có thể có 2 đơn giống hệt nhau).
+	 */
 	public static function existing_hashes() {
 		global $wpdb;
-		$counts = array();
-		foreach ( $wpdb->get_col( 'SELECT row_hash FROM ' . self::table() ) as $hash ) {
-			$counts[ $hash ] = isset( $counts[ $hash ] ) ? $counts[ $hash ] + 1 : 1;
+		$map = array();
+		foreach ( $wpdb->get_results( 'SELECT id, row_hash FROM ' . self::table() . ' ORDER BY id ASC' ) as $row ) {
+			$map[ $row->row_hash ][] = (int) $row->id;
 		}
-		return $counts;
+		return $map;
 	}
 
 	/**
@@ -246,8 +288,8 @@ class L678W_DB {
 		if ( '' !== $args['search'] ) {
 			$like   = '%' . $wpdb->esc_like( $args['search'] ) . '%';
 			$digits = preg_replace( '/\D+/', '', $args['search'] );
-			$sub    = array( 'customer_name LIKE %s', 'product_name LIKE %s', 'config LIKE %s', 'address LIKE %s' );
-			array_push( $params, $like, $like, $like, $like );
+			$sub    = array( 'customer_name LIKE %s', 'product_name LIKE %s', 'config LIKE %s', 'address LIKE %s', 'salesperson LIKE %s' );
+			array_push( $params, $like, $like, $like, $like, $like );
 			if ( strlen( $digits ) >= 3 ) {
 				$sub[]    = 'phone_index LIKE %s';
 				$params[] = '%' . $wpdb->esc_like( ltrim( $digits, '0' ) ) . '%';

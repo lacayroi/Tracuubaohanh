@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       Laptop678 Tra Cứu Bảo Hành
  * Description:       Tra cứu bảo hành theo số điện thoại. Nhập dữ liệu bằng file Excel (.xlsx/.csv) hoặc thêm thủ công. Tối ưu cho theme Flatsome (có element UX Builder).
- * Version:           1.0.1
+ * Version:           1.1.0
  * Requires at least: 5.6
  * Requires PHP:      7.4
  * Author:            Laptop678
@@ -11,8 +11,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'L678W_VERSION', '1.0.1' );
-define( 'L678W_DB_VERSION', '1.0.1' );
+define( 'L678W_VERSION', '1.1.0' );
+define( 'L678W_DB_VERSION', '1.1.0' );
 define( 'L678W_FILE', __FILE__ );
 define( 'L678W_DIR', plugin_dir_path( __FILE__ ) );
 define( 'L678W_URL', plugin_dir_url( __FILE__ ) );

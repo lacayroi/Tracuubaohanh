@@ -18,6 +18,7 @@ class L678W_Importer {
 			'product_name'    => array( 'ten may', 'ten san pham', 'san pham', 'model', 'product' ),
 			'config'          => array( 'cau hinh', 'sku', 'config', 'thong so' ),
 			'purchase_date'   => array( 'ngay mua', 'ngay ban', 'ngay xuat', 'purchase date', 'date' ),
+			'salesperson'     => array( 'nhan vien ban hang', 'nhan vien ban', 'nv ban hang', 'nv ban', 'nguoi ban', 'sale' ),
 			'warranty_months' => array( 'bao hanh thang', 'thoi gian bao hanh', 'han bao hanh', 'so thang bao hanh', 'warranty' ),
 			'note'            => array( 'ghi chu', 'tinh trang', 'note' ),
 		);
@@ -26,14 +27,14 @@ class L678W_Importer {
 	/**
 	 * @param string $path Đường dẫn file tạm.
 	 * @param string $ext  xlsx | csv.
-	 * @param array  $opts mode: skip|all ; replace: bool.
+	 * @param array  $opts mode: update|skip|all ; replace: bool.
 	 * @return array|WP_Error
 	 */
 	public static function import( $path, $ext, array $opts = array() ) {
 		$opts = wp_parse_args(
 			$opts,
 			array(
-				'mode'    => 'skip',
+				'mode'    => 'update',
 				'replace' => false,
 			)
 		);
@@ -55,6 +56,7 @@ class L678W_Importer {
 			'total'      => 0,
 			'inserted'   => 0,
 			'duplicate'  => 0,
+			'updated'    => 0,
 			'empty'      => 0,
 			'no_phone'   => array(),
 			'bad_date'   => array(),
@@ -64,7 +66,7 @@ class L678W_Importer {
 		if ( $opts['replace'] ) {
 			L678W_DB::truncate();
 		}
-		$existing = ( 'skip' === $opts['mode'] && ! $opts['replace'] ) ? L678W_DB::existing_hashes() : array();
+		$existing = ( 'all' !== $opts['mode'] && ! $opts['replace'] ) ? L678W_DB::existing_hashes() : array();
 
 		$batch = array();
 		foreach ( $rows as $line_number => $cells ) {
@@ -91,8 +93,12 @@ class L678W_Importer {
 
 			// So với dữ liệu đã có trước khi import (đếm theo số lượng, vì khách có thể mua 2 máy giống nhau cùng ngày).
 			if ( ! empty( $existing[ $row['row_hash'] ] ) ) {
-				$existing[ $row['row_hash'] ]--;
-				$stats['duplicate']++;
+				$id = array_shift( $existing[ $row['row_hash'] ] );
+				if ( 'update' === $opts['mode'] && L678W_DB::fill_from_import( $id, $row ) ) {
+					$stats['updated']++;
+				} else {
+					$stats['duplicate']++;
+				}
 				continue;
 			}
 
@@ -217,6 +223,6 @@ class L678W_Importer {
 	 * Tiêu đề cột cho file mẫu / file export (import lại được).
 	 */
 	public static function template_headers() {
-		return array( 'Tên khách hàng', 'Số điện thoại', 'Địa chỉ', 'Tên máy', 'Cấu hình', 'Ngày mua', 'Bảo hành (tháng)', 'Ghi chú' );
+		return array( 'Tên khách hàng', 'Số điện thoại', 'Địa chỉ', 'Tên máy', 'Cấu hình', 'Ngày mua', 'Nhân viên bán', 'Bảo hành (tháng)', 'Ghi chú' );
 	}
 }

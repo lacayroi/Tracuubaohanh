@@ -171,9 +171,10 @@ class L678W_Frontend {
 			if ( 'hide' !== $settings['address_mode'] && '' !== (string) $row->address ) {
 				$lines['Địa chỉ'] = 'partial' === $settings['address_mode'] ? L678W_Helpers::mask_address( $row->address ) : $row->address;
 			}
-			$lines['Tên máy']  = $row->product_name;
-			$lines['Cấu hình'] = $row->config;
-			$lines['Ngày mua'] = L678W_Helpers::format_date( $row->purchase_date );
+			$lines['Tên máy']       = $row->product_name;
+			$lines['Cấu hình']      = $row->config;
+			$lines['Ngày mua']      = L678W_Helpers::format_date( $row->purchase_date );
+			$lines['Nhân viên bán'] = $row->salesperson;
 
 			$badge = '';
 			if ( $settings['show_warranty'] ) {

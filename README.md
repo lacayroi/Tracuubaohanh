@@ -5,9 +5,9 @@ Thay thế plugin tra cứu miễn phí cũ (bị lỗi import Excel).
 
 ## Tính năng
 
-- **Thông tin mỗi đơn**: Tên khách hàng, SĐT, Địa chỉ, Tên máy, Cấu hình, Ngày mua (+ không bắt buộc: số tháng bảo hành, ghi chú/tình trạng).
+- **Thông tin mỗi đơn**: Tên khách hàng, SĐT, Địa chỉ, Tên máy, Cấu hình, Ngày mua, Nhân viên bán (+ không bắt buộc: số tháng bảo hành, ghi chú/tình trạng).
 - **2 cách nhập dữ liệu**
-  1. **Import file** `.xlsx` hoặc `.csv`: tự nhận cột theo tiêu đề, **dùng được luôn file Excel mẫu cũ** (Tên Sản phẩm → Tên máy, SKU → Cấu hình). Đọc được ngày `dd/mm/yyyy` lẫn ô ngày của Excel, tự thêm số 0 bị Excel làm mất ở đầu SĐT, tách được ô có 2 số điện thoại. Có chế độ bỏ qua đơn đã có, hoặc xoá hết rồi import lại.
+  1. **Import file** `.xlsx` hoặc `.csv`: tự nhận cột theo tiêu đề, **dùng được luôn file Excel mẫu cũ** (Tên Sản phẩm → Tên máy, SKU → Cấu hình). Đọc được ngày `dd/mm/yyyy` lẫn ô ngày của Excel, tự thêm số 0 bị Excel làm mất ở đầu SĐT, tách được ô có 2 số điện thoại. Mặc định cập nhật đơn đã có và thêm đơn mới (không trùng, ô trống trong file không xoá dữ liệu trên web); có thể chọn chỉ thêm đơn mới, hoặc xoá hết rồi import lại.
   2. **Thêm thủ công**: form 1 trang, nút "Lưu & thêm đơn khác" để nhân viên nhập liên tục.
 - **Trang tra cứu**: tra bằng AJAX, có nhãn Còn/Hết bảo hành, hiển thị đẹp trên mobile, lấy màu chính của Flatsome. Có element **"Tra cứu bảo hành"** trong UX Builder.
 - Shortcode `[tra_cuu_bao_hanh]`. Shortcode cũ `[shortcode_check_warranty]` vẫn chạy, nên trang `/tra-ma-bao-hanh/` hiện tại không cần sửa.

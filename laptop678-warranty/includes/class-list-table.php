@@ -25,6 +25,7 @@ class L678W_List_Table extends WP_List_Table {
 			'product_name'  => 'Tên máy',
 			'config'        => 'Cấu hình',
 			'purchase_date' => 'Ngày mua',
+			'salesperson'   => 'NV bán',
 			'warranty'      => 'Bảo hành đến',
 			'address'       => 'Địa chỉ',
 		);
